@@ -14,91 +14,90 @@
     />
   </head>
 
-  <body class="flex flex-col min-h-screen">
+  <body class="flex flex-col min-h-screen bg-gray-900 text-white">
     <!-- Header -->
-    <header class="bg-blue-600 text-white p-4 shadow-md text-center">
+    <header class="bg-gray-800 p-4 shadow-md text-center">
       <div class="text-lg font-bold">Blobs</div>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow container mx-auto p-4">
+    <main class="flex-grow container mx-auto p-4 flex flex-col flex-wrap">
       <canvas
         id="myCanvas"
         class="w-full h-full border rounded shadow-md"
       ></canvas>
 
-      <!-- Zoom Buttons -->
-      <div class="text-center mt-4">
-        <button
-          id="zoomIn"
-          class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition duration-300"
-        >
-          Zoom In
-        </button>
-        <button
-          id="zoomOut"
-          class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition duration-300"
-        >
-          Zoom Out
-        </button>
-      </div>
-
-      <!-- Gravity Well Toggle -->
-      <div class="text-center mt-4">
-        <label for="gravityWellToggle" class="mr-2 text-gray-700"
-          >Gravity Well</label
-        >
-        <input
-          type="checkbox"
-          id="gravityWellToggle"
-          class="form-checkbox h-5 w-5 text-blue-600"
-        />
-      </div>
-
-      <!-- Display IDs Toggle -->
-      <div class="text-center mt-4">
-        <label for="displayIdsToggle" class="mr-2 text-gray-700"
-          >Display IDs</label
-        >
-        <input
-          type="checkbox"
-          id="displayIdsToggle"
-          class="form-checkbox h-5 w-5 text-blue-600"
-        />
-      </div>
-
-      <table
-        id="circleTable"
-        class="table-auto w-full mt-4 bg-white shadow-md rounded"
+      <!-- Controls Panel -->
+      <div
+        class="mt-4 flex flex-col items-center border p-4 rounded shadow-md h-full"
       >
-        <thead>
-          <tr class="bg-gray-200">
-            <th class="px-4 py-2 text-center">Circle</th>
-            <th class="px-4 py-2 text-center">X Position</th>
-            <th class="px-4 py-2 text-center">Y Position</th>
-            <th class="px-4 py-2 text-center">Radius</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <div id="movingMessage" class="text-center mt-4 text-gray-700"></div>
+        <!-- Zoom Buttons -->
+        <div class="text-center mb-4">
+          <button
+            id="zoomIn"
+            class="text-white px-4 py-2 rounded shadow hover:-dark transition duration-300 border border-white"
+          >
+            Zoom In
+          </button>
+          <button
+            id="zoomOut"
+            class="text-white px-4 py-2 rounded shadow hover:-dark transition duration-300 border border-white"
+          >
+            Zoom Out
+          </button>
+        </div>
+
+        <!-- Gravity Well Toggle -->
+        <div class="text-center mb-4">
+          <label for="gravityWellToggle" class="mr-2">Gravity Well</label>
+          <input
+            type="checkbox"
+            id="gravityWellToggle"
+            class="form-checkbox h-5 w-5"
+          />
+        </div>
+
+        <!-- Display IDs Toggle -->
+        <div class="text-center mb-4">
+          <label for="displayIdsToggle" class="mr-2">Display IDs</label>
+          <input
+            type="checkbox"
+            id="displayIdsToggle"
+            class="form-checkbox h-5 w-5"
+          />
+        </div>
+      </div>
+
+      <div class="container mx-auto p-4 mt-4 w-full border rounded shadow-md">
+        <table
+          id="circleTable"
+          class="table-auto w-full bg-gray-800 shadow-md rounded"
+        >
+          <thead>
+            <tr class="bg-gray-700">
+              <th class="px-4 py-2 text-center">Circle</th>
+              <th class="px-4 py-2 text-center">X Position</th>
+              <th class="px-4 py-2 text-center">Y Position</th>
+              <th class="px-4 py-2 text-center">Radius</th>
+              <th class="px-4 py-2 text-center">Color</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </main>
 
     <!-- Footer -->
-    <footer class="bg-blue-600 text-center py-4 mt-8 w-full shadow-inner">
-      <a
-        href="https://buymeacoffee.com/vandyand"
-        class="text-white hover:underline mx-2"
+    <footer class="bg-gray-800 text-center py-4 mt-8 w-full shadow-inner">
+      <a href="https://buymeacoffee.com/vandyand" class="hover:underline mx-2"
         ><i class="fas fa-coffee"></i
       ></a>
       <a
         href="https://www.linkedin.com/in/vandyand/"
-        class="text-white hover:underline mx-2"
+        class="hover:underline mx-2"
         ><i class="fab fa-linkedin"></i
       ></a>
-      <a
-        href="https://github.com/vandyand"
-        class="text-white hover:underline mx-2"
+      <a href="https://github.com/vandyand" class="hover:underline mx-2"
         ><i class="fab fa-github"></i
       ></a>
     </footer>
@@ -110,7 +109,6 @@
         var circleTableBody = document
           .getElementById("circleTable")
           .getElementsByTagName("tbody")[0];
-        var movingMessageDiv = document.getElementById("movingMessage");
         var zoomInButton = document.getElementById("zoomIn");
         var zoomOutButton = document.getElementById("zoomOut");
         var gravityWellToggle = document.getElementById("gravityWellToggle");
@@ -124,14 +122,17 @@
         // Generate up to a dozen randomly colored and sized circles
         var circles = [];
         var colors = [
-          "#EF4444", // red-500
-          "#3B82F6", // blue-500
-          "#10B981", // green-500
-          "#8B5CF6", // purple-500
-          "#F97316", // orange-500
-          "#EC4899", // pink-500
-          "#A3E635", // lime-500
-          "#FBBF24", // amber-500
+          "#FFFF00", // neon yellow
+          "#FF7400", // neon orange
+          "#FF00FF", // neon pink
+          "#00FF00", // neon green
+          "#00FFFF", // neon blue
+          "#800080", // neon purple
+          "#FF0000", // neon red
+          "#00FF2B", // neon bright green
+          "#FD00FF", // neon bright pink
+          "#00FFC5", // neon turquoise
+          "#00ECFF", // neon sky blue
         ];
         var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         for (var i = 0; i < 12; i++) {
@@ -168,7 +169,7 @@
             y,
             radius
           );
-          gradient.addColorStop(0, "rgba(255, 255, 255, 0.5)");
+          gradient.addColorStop(0, "rgba(255, 255, 255, 0.75)");
           gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
           ctx.fillStyle = gradient;
           ctx.beginPath();
@@ -178,8 +179,8 @@
 
           // Draw the circle's id in the center if displayIdsEnabled is true
           if (displayIdsEnabled) {
-            ctx.fillStyle = "white";
-            ctx.font = "bold " + radius + "px Arial";
+            ctx.fillStyle = "black";
+            ctx.font = "bold 8px Arial";
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
             ctx.fillText(id, x, y);
@@ -207,15 +208,21 @@
             var cell2 = row.insertCell(1);
             var cell3 = row.insertCell(2);
             var cell4 = row.insertCell(3);
+            var cell5 = row.insertCell(4);
             cell1.innerHTML = circle.id;
             cell2.innerHTML = Math.round(circle.x);
             cell3.innerHTML = Math.round(circle.y);
             cell4.innerHTML = Math.round(circle.radius);
+            cell5.innerHTML = circle.color;
 
             cell1.classList.add("text-center");
             cell2.classList.add("text-center");
             cell3.classList.add("text-center");
             cell4.classList.add("text-center");
+            cell5.classList.add("text-center");
+
+            // Set the font color to match the circle color
+            row.style.color = circle.color;
           });
         }
 
@@ -268,8 +275,6 @@
 
             if (distance < circle.radius) {
               selectedCircle = circle;
-              movingMessageDiv.innerHTML = "User moving circle " + circle.id;
-              movingMessageDiv.style.color = circle.color;
               clickedOnCircle = true;
             }
           });
@@ -282,7 +287,6 @@
         canvas.addEventListener("mouseup", function () {
           isMouseDown = false;
           selectedCircle = null;
-          movingMessageDiv.innerHTML = "";
         });
 
         canvas.addEventListener("mousemove", function (event) {
