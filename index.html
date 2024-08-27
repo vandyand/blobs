@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blobs</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+  </head>
+
+  <body class="flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="bg-blue-600 text-white p-4 shadow-md text-center">
+      <div class="text-lg font-bold">Blobs</div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto p-4">
+      <canvas
+        id="myCanvas"
+        class="w-full h-full border rounded shadow-md"
+      ></canvas>
+
+      <!-- Zoom Buttons -->
+      <div class="text-center mt-4">
+        <button
+          id="zoomIn"
+          class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition duration-300"
+        >
+          Zoom In
+        </button>
+        <button
+          id="zoomOut"
+          class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 transition duration-300"
+        >
+          Zoom Out
+        </button>
+      </div>
+
+      <!-- Gravity Well Toggle -->
+      <div class="text-center mt-4">
+        <label for="gravityWellToggle" class="mr-2 text-gray-700"
+          >Gravity Well</label
+        >
+        <input
+          type="checkbox"
+          id="gravityWellToggle"
+          class="form-checkbox h-5 w-5 text-blue-600"
+        />
+      </div>
+
+      <!-- Display IDs Toggle -->
+      <div class="text-center mt-4">
+        <label for="displayIdsToggle" class="mr-2 text-gray-700"
+          >Display IDs</label
+        >
+        <input
+          type="checkbox"
+          id="displayIdsToggle"
+          class="form-checkbox h-5 w-5 text-blue-600"
+        />
+      </div>
+
+      <table
+        id="circleTable"
+        class="table-auto w-full mt-4 bg-white shadow-md rounded"
+      >
+        <thead>
+          <tr class="bg-gray-200">
+            <th class="px-4 py-2 text-center">Circle</th>
+            <th class="px-4 py-2 text-center">X Position</th>
+            <th class="px-4 py-2 text-center">Y Position</th>
+            <th class="px-4 py-2 text-center">Radius</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div id="movingMessage" class="text-center mt-4 text-gray-700"></div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-blue-600 text-center py-4 mt-8 w-full shadow-inner">
+      <a
+        href="https://buymeacoffee.com/vandyand"
+        class="text-white hover:underline mx-2"
+        ><i class="fas fa-coffee"></i
+      ></a>
+      <a
+        href="https://www.linkedin.com/in/vandyand/"
+        class="text-white hover:underline mx-2"
+        ><i class="fab fa-linkedin"></i
+      ></a>
+      <a
+        href="https://github.com/vandyand"
+        class="text-white hover:underline mx-2"
+        ><i class="fab fa-github"></i
+      ></a>
+    </footer>
+
+    <script>
+      window.onload = function () {
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        var circleTableBody = document
+          .getElementById("circleTable")
+          .getElementsByTagName("tbody")[0];
+        var movingMessageDiv = document.getElementById("movingMessage");
+        var zoomInButton = document.getElementById("zoomIn");
+        var zoomOutButton = document.getElementById("zoomOut");
+        var gravityWellToggle = document.getElementById("gravityWellToggle");
+        var displayIdsToggle = document.getElementById("displayIdsToggle");
+        var scale = 1.0;
+        var offsetX = 0;
+        var offsetY = 0;
+        var gravityWellEnabled = false;
+        var displayIdsEnabled = false;
+
+        // Generate up to a dozen randomly colored and sized circles
+        var circles = [];
+        var colors = [
+          "#EF4444", // red-500
+          "#3B82F6", // blue-500
+          "#10B981", // green-500
+          "#8B5CF6", // purple-500
+          "#F97316", // orange-500
+          "#EC4899", // pink-500
+          "#A3E635", // lime-500
+          "#FBBF24", // amber-500
+        ];
+        var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+        for (var i = 0; i < 12; i++) {
+          var radius = Math.random() * 20 + 10;
+          var x = Math.random() * (canvas.width - 2 * radius) + radius;
+          var y = Math.random() * (canvas.height - 2 * radius) + radius;
+          var color = colors[Math.floor(Math.random() * colors.length)];
+          var id = alphabet[i % alphabet.length];
+          circles.push({
+            id: id,
+            x: x,
+            y: y,
+            radius: radius,
+            color: color,
+            originalRadius: radius,
+            speedY: Math.random() * 0.3 + 0.1,
+          });
+        }
+
+        function drawCircle(x, y, radius, color, id) {
+          // Draw the main circle
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+          ctx.fillStyle = color;
+          ctx.fill();
+          ctx.closePath();
+
+          // Draw the highlight to make it look like a sphere
+          var gradient = ctx.createRadialGradient(
+            x - radius / 3,
+            y - radius / 3,
+            radius / 10,
+            x,
+            y,
+            radius
+          );
+          gradient.addColorStop(0, "rgba(255, 255, 255, 0.5)");
+          gradient.addColorStop(1, "rgba(255, 255, 255, 0)");
+          ctx.fillStyle = gradient;
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2, false);
+          ctx.fill();
+          ctx.closePath();
+
+          // Draw the circle's id in the center if displayIdsEnabled is true
+          if (displayIdsEnabled) {
+            ctx.fillStyle = "white";
+            ctx.font = "bold " + radius + "px Arial";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(id, x, y);
+          }
+        }
+
+        function drawAllCircles() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          circles.forEach(function (circle) {
+            drawCircle(
+              circle.x,
+              circle.y,
+              circle.radius,
+              circle.color,
+              circle.id
+            );
+          });
+        }
+
+        function updateTable() {
+          circleTableBody.innerHTML = "";
+          circles.forEach(function (circle) {
+            var row = circleTableBody.insertRow();
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            var cell4 = row.insertCell(3);
+            cell1.innerHTML = circle.id;
+            cell2.innerHTML = Math.round(circle.x);
+            cell3.innerHTML = Math.round(circle.y);
+            cell4.innerHTML = Math.round(circle.radius);
+
+            cell1.classList.add("text-center");
+            cell2.classList.add("text-center");
+            cell3.classList.add("text-center");
+            cell4.classList.add("text-center");
+          });
+        }
+
+        function animate() {
+          ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transformations
+          ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+          // Calculate the center of the canvas
+          var centerX = canvas.width / 2;
+          var centerY = canvas.height / 2;
+
+          // Translate to the center, scale, then translate back
+          ctx.translate(centerX, centerY);
+          ctx.scale(scale, scale);
+          ctx.translate(-centerX, -centerY);
+
+          drawAllCircles();
+          updateTable();
+          moveSelectedCircle();
+          moveCirclesToGravityWell();
+          requestAnimationFrame(animate);
+        }
+
+        var isMouseDown = false;
+        var selectedCircle = null;
+        var mouseX = 0;
+        var mouseY = 0;
+
+        canvas.addEventListener("mousedown", function (event) {
+          isMouseDown = true;
+
+          var rect = canvas.getBoundingClientRect();
+          mouseX = Math.round(
+            ((event.clientX - rect.left) * (canvas.width / rect.width) -
+              offsetX) /
+              scale
+          );
+          mouseY = Math.round(
+            ((event.clientY - rect.top) * (canvas.height / rect.height) -
+              offsetY) /
+              scale
+          );
+
+          var clickedOnCircle = false;
+
+          circles.forEach(function (circle) {
+            var dx = mouseX - circle.x;
+            var dy = mouseY - circle.y;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < circle.radius) {
+              selectedCircle = circle;
+              movingMessageDiv.innerHTML = "User moving circle " + circle.id;
+              movingMessageDiv.style.color = circle.color;
+              clickedOnCircle = true;
+            }
+          });
+
+          if (!clickedOnCircle && gravityWellEnabled) {
+            moveCirclesToGravityWell();
+          }
+        });
+
+        canvas.addEventListener("mouseup", function () {
+          isMouseDown = false;
+          selectedCircle = null;
+          movingMessageDiv.innerHTML = "";
+        });
+
+        canvas.addEventListener("mousemove", function (event) {
+          var rect = canvas.getBoundingClientRect();
+          mouseX = Math.round(
+            ((event.clientX - rect.left) * (canvas.width / rect.width) -
+              offsetX) /
+              scale
+          );
+          mouseY = Math.round(
+            ((event.clientY - rect.top) * (canvas.height / rect.height) -
+              offsetY) /
+              scale
+          );
+        });
+
+        function moveSelectedCircle() {
+          if (isMouseDown && selectedCircle) {
+            var dx = mouseX - selectedCircle.x;
+            var dy = mouseY - selectedCircle.y;
+            var distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance > 1) {
+              var angle = Math.atan2(dy, dx);
+              var speed = distance * 0.1; // Speed proportional to distance
+              selectedCircle.x += speed * Math.cos(angle);
+              selectedCircle.y += speed * Math.sin(angle);
+            }
+          }
+
+          // Check for collision with other circles and move them away
+          circles.forEach(function (movingCircle) {
+            circles.forEach(function (otherCircle) {
+              if (movingCircle !== otherCircle) {
+                var otherDx = otherCircle.x - movingCircle.x;
+                var otherDy = otherCircle.y - movingCircle.y;
+                var otherDistance = Math.sqrt(
+                  otherDx * otherDx + otherDy * otherDy
+                );
+
+                if (otherDistance < movingCircle.radius + otherCircle.radius) {
+                  var moveAngle = Math.atan2(otherDy, otherDx);
+                  var overlap =
+                    movingCircle.radius + otherCircle.radius - otherDistance;
+
+                  // Move both circles away from each other based on their radii
+                  movingCircle.x -= (overlap / 2) * Math.cos(moveAngle);
+                  movingCircle.y -= (overlap / 2) * Math.sin(moveAngle);
+                  otherCircle.x += (overlap / 2) * Math.cos(moveAngle);
+                  otherCircle.y += (overlap / 2) * Math.sin(moveAngle);
+                }
+              }
+            });
+          });
+
+          drawAllCircles();
+          updateTable();
+        }
+
+        function moveCirclesToGravityWell() {
+          if (isMouseDown && gravityWellEnabled && !selectedCircle) {
+            circles.forEach(function (circle) {
+              var dx = mouseX - circle.x;
+              var dy = mouseY - circle.y;
+              var distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance > 1) {
+                var angle = Math.atan2(dy, dx);
+                var speed = distance * 0.05; // Speed proportional to distance
+                circle.x += speed * Math.cos(angle);
+                circle.y += speed * Math.sin(angle);
+              }
+            });
+          }
+        }
+
+        zoomInButton.addEventListener("click", function () {
+          var centerX = canvas.width / 2;
+          var centerY = canvas.height / 2;
+
+          offsetX = (offsetX - centerX) * 1.1 + centerX;
+          offsetY = (offsetY - centerY) * 1.1 + centerY;
+
+          scale *= 1.1;
+        });
+
+        zoomOutButton.addEventListener("click", function () {
+          var centerX = canvas.width / 2;
+          var centerY = canvas.height / 2;
+
+          offsetX = (offsetX - centerX) / 1.1 + centerX;
+          offsetY = (offsetY - centerY) / 1.1 + centerY;
+
+          scale /= 1.1;
+        });
+
+        gravityWellToggle.addEventListener("change", function () {
+          gravityWellEnabled = gravityWellToggle.checked;
+        });
+
+        displayIdsToggle.addEventListener("change", function () {
+          displayIdsEnabled = displayIdsToggle.checked;
+        });
+
+        animate();
+      };
+    </script>
+  </body>
+</html>
